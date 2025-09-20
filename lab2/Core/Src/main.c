@@ -116,7 +116,7 @@ void handler(uint8_t * data, uint8_t n) {
 	uint8_t led1[] = {'l', 'e', 'd', '\r', '\n'};
 	uint8_t off0[] = {'o', 'f', 'f', '\r', '\n'};
 	uint8_t n_trans = 5;
-	switch(data[0]) {
+	switch(data[1]) {
 	case '1': {
 		transmit(led1, n_trans);
 		break;
@@ -128,6 +128,27 @@ void handler(uint8_t * data, uint8_t n) {
 	}
 }
 
+uint8_t receive() {
+	uint8_t res;
+	while (!(USART2->SR & USART_SR_RXNE)) {};
+	res = USART2->DR;
+	// сброс флага RXN
+	USART2->SR &= ~USART_SR_RXNE;
+	return res;
+}
+
+uint8_t* receive_arr(uint8_t n) {
+	uint8_t arr[] = {'a', 'b', 'c', 'd'};
+	uint8_t *t = arr;
+	// receive
+	// when character is received, RXNE bit is set
+	// while nothing is received -- wait
+	for (uint8_t i = 0; i < n; i++) {
+		t[i] = receive();
+	}
+	return t;
+}
+
 int main(void) {
   GPIOA_Init();
   USART2_Init();
@@ -135,21 +156,16 @@ int main(void) {
 
   // repeater
   // variable to store received data
-  uint8_t t[] = {'t'};
-  uint8_t n = 1;
+
+  uint8_t n = 4;
+  uint8_t t[] = {'a', 'b', 'c', 'd'};
+  uint8_t *ptr;
   // loop forever
   for(;;) {
-	  //transmit(t, n);
-
-	// receive
-	// when character is received, RXNE bit is set
-	// while nothing is received -- wait
-	while (!(USART2->SR & USART_SR_RXNE)) {};
-	for (uint8_t i = 0; i < n; i++) {
-	  t[i] = USART2->DR;
-	}
-    // сброс флага RXN
-    USART2->SR &= ~USART_SR_RXNE;
+	  ptr = receive_arr(n);
+	  for (uint8_t i = 0; i < n; i++) {
+		  t[i] = ptr[i];
+	  }
 	// получили данные -- пора отправить ответ
 	handler(t, n);
   }
