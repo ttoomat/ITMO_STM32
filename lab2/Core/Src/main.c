@@ -99,6 +99,38 @@ void LED_mode_setup() {
   // pd2, pc13 - input = 00 - reset state
 }
 
+// transmit an array
+void transmit(uint8_t * data, uint8_t n) {
+  for (uint8_t i = 0; i < n; i++) {
+    if (!(USART2->SR & USART_SR_RXNE)) {
+      // transmit
+      if (USART2->SR & USART_SR_TXE) {
+	    USART2->DR = data[i];
+      }
+    }
+  }
+}
+
+// обработчик операции которая по вариантам
+void handler(uint8_t * data, uint8_t n) {
+	/* Сейчас обработчик посылает текстовый ответ.
+	 * В лабе обработчик будет включать светодиод.
+	 */
+	uint8_t led1[] = {'l', 'e', 'd', '\r', '\n'};
+	uint8_t off0[] = {'o', 'f', 'f', '\r', '\n'};
+	uint8_t n_trans = 5;
+	switch(data[0]) {
+	case '1': {
+		transmit(led1, n_trans);
+		break;
+	}
+	case '0': {
+		transmit(off0, n_trans);
+		break;
+	}
+	}
+}
+
 int main(void) {
   GPIOA_Init();
   USART2_Init();
@@ -106,16 +138,21 @@ int main(void) {
 
   // repeater
   // variable to store received data
-  uint16_t t = 't';
+  uint8_t t[] = {'t'};
+  uint8_t n = 1;
   // loop forever
   for(;;) {
+	  //transmit(t, n);
+
 	// receive
 	if (USART2->SR & USART_SR_RXNE) {
-      t = USART2->DR;
+		for (uint8_t i = 0; i < n; i++) {
+          t[i] = USART2->DR;
+		}
+      // сброс флага RXN
+      USART2->SR &= ~USART_SR_RXNE;
 	}
-	// transmit
-	if (USART2->SR & USART_SR_TXE) {
-	  USART2->DR = t;
-	}
+	// получили данные -- пора отправить ответ, но вне if типа
+	handler(t, n);
   }
 }
