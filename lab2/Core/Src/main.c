@@ -100,7 +100,7 @@ void LED_mode_setup() {
 }
 
 // transmit an array
-void transmit(uint8_t * data, uint8_t n) {
+void transmit(const uint8_t* data, uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
 	// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
     while (!(USART2->SR & USART_SR_TXE)) {};
@@ -109,7 +109,7 @@ void transmit(uint8_t * data, uint8_t n) {
 }
 
 // обработчик операции которая по вариантам
-void handler(uint8_t * data, uint8_t n) {
+void variant_handler(const uint8_t* data, uint8_t n) {
 	/* Сейчас обработчик посылает текстовый ответ.
 	 * В лабе обработчик будет включать светодиод.
 	 */
@@ -117,12 +117,35 @@ void handler(uint8_t * data, uint8_t n) {
 	uint8_t off0[] = {'o', 'f', 'f', '\r', '\n'};
 	uint8_t n_trans = 5;
 	switch(data[1]) {
-	case '1': {
-		transmit(led1, n_trans);
+	case '0': {
+		//transmit(off0, n_trans);
+		GPIOC->ODR &= 0xF00F;
 		break;
 	}
-	case '0': {
-		transmit(off0, n_trans);
+	case '1': {
+		//transmit(led1, n_trans);
+
+		break;
+	}
+	case '2': {
+		break;
+	}
+	case '3': {
+		break;
+	}
+	case '4': {
+		break;
+	}
+	case '5': {
+		break;
+	}
+	case '6': {
+		break;
+	}
+	case '7': {
+		break;
+	}
+	case '8': {
 		break;
 	}
 	}
@@ -148,20 +171,57 @@ void receive_arr(uint8_t*buf, uint8_t n) {
 	}
 }
 
+void command_handler(const uint8_t* data, uint8_t n) {
+	// command
+	switch (data[0]) {
+	// echo - repeat command
+	case 'e' | 'E': {
+		transmit(data, n);
+		break;
+	}
+	// all leds on PC4-PC11
+	case 'a' | 'A': {
+		GPIOC->ODR |= 0x0FF0;
+		transmit(data, n);
+		break;
+	}
+	// all leds off
+	case 'f' | 'F': {
+		GPIOC->ODR &= ~0xFF0;
+		transmit(data, n);
+		break;
+	}
+	// variant command: accept '0'-'8' number and turn on one led
+	case 'v' | 'V': {
+		variant_handler(data, n);
+		break;
+	}
+	// show leds configuration like 0b00010010
+	case 's' | 'S': {
+		// можно просто считать ODR
+		uint32_t leds = GPIOC->ODR;
+		// оттуда достать 11-4 биты...
+		break;
+	}
+	}
+}
+
 int main(void) {
   GPIOA_Init();
   USART2_Init();
   LED_mode_setup();
 
-  // repeater
-  // variable to store received data
-
-  uint8_t n = 4;
+  // array to store received and transmitted data
   uint8_t t[] = {'a', 'b', 'c', 'd'};
+  // array size
+  uint8_t n = 4;
   // loop forever
   for(;;) {
 	  receive_arr(t, n);
 	// получили данные -- пора отправить ответ
-	handler(t, n);
+	command_handler(t, n);
+
+	// todo: разделение функций по файлам
+	// todo: нормальные названия для функций, описания функций
   }
 }
