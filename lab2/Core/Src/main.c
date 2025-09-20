@@ -19,10 +19,6 @@
 #include <stdint.h>
 #include "stm32f446xx.h"
 
-#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-#endif
-
 #define BAUDRATE 19200
 #define APBx_FREQ 16000000
 #define GPIOAEN				   (1U << 0)
@@ -103,23 +99,23 @@ void LED_mode_setup() {
   // pd2, pc13 - input = 00 - reset state
 }
 
-int main(void)
-{
-    GPIOA_Init();
-    USART2_Init();
-    LED_mode_setup();
-    // разработать протокол связи -- позже
-    // сначала сделаем повторялку
+int main(void) {
+  GPIOA_Init();
+  USART2_Init();
+  LED_mode_setup();
 
-    // text for transmission
-    uint16_t t = 't';
-    /* Loop forever */
+  // repeater
+  // variable to store received data
+  uint16_t t = 't';
+  // loop forever
   for(;;) {
-	  // transmit
-	  if (!(USART2->SR & USART_SR_RXNE)) {
-		  if (USART2->SR & USART_SR_TXE) {
-		      USART2->DR = t;
-		  }
-	  }
+	// receive
+	if (USART2->SR & USART_SR_RXNE) {
+      t = USART2->DR;
+	}
+	// transmit
+	if (USART2->SR & USART_SR_TXE) {
+	  USART2->DR = t;
+	}
   }
 }
