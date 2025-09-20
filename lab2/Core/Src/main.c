@@ -102,12 +102,9 @@ void LED_mode_setup() {
 // transmit an array
 void transmit(uint8_t * data, uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
-    if (!(USART2->SR & USART_SR_RXNE)) {
-      // transmit
-      if (USART2->SR & USART_SR_TXE) {
-	    USART2->DR = data[i];
-      }
-    }
+	// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
+    while (!(USART2->SR & USART_SR_TXE)) {};
+	USART2->DR = data[i];
   }
 }
 
@@ -145,14 +142,15 @@ int main(void) {
 	  //transmit(t, n);
 
 	// receive
-	if (USART2->SR & USART_SR_RXNE) {
-		for (uint8_t i = 0; i < n; i++) {
-          t[i] = USART2->DR;
-		}
-      // сброс флага RXN
-      USART2->SR &= ~USART_SR_RXNE;
+	// when character is received, RXNE bit is set
+	// while nothing is received -- wait
+	while (!(USART2->SR & USART_SR_RXNE)) {};
+	for (uint8_t i = 0; i < n; i++) {
+	  t[i] = USART2->DR;
 	}
-	// получили данные -- пора отправить ответ, но вне if типа
+    // сброс флага RXN
+    USART2->SR &= ~USART_SR_RXNE;
+	// получили данные -- пора отправить ответ
 	handler(t, n);
   }
 }
