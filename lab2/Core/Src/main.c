@@ -16,88 +16,8 @@
  ******************************************************************************
  */
 
-#include <stdint.h>
-#include "stm32f446xx.h"
+#include "initialization.h"
 
-#define BAUDRATE 19200
-#define APBx_FREQ 16000000
-#define GPIOAEN				   (1U << 0)
-#define GPIOCEN                (1U << 2)
-
-void USART2_Init() {
-  // тактирование
-  RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-
-  //a) Включите приёмник и передатчик.
-  // transmit enable, receive enable
-  USART2->CR1 |= USART_CR1_TE;
-  USART2->CR1 |= USART_CR1_RE;
-  //b) Рассчитайте и установите скорость передачи (baud rate) в регистре (USART_BRR)
-  // для системной частоты 16MHz
-  USART2->BRR = APBx_FREQ / BAUDRATE;
-  //c) Включите генерацию прерываний RXNE (USART_SR)
-  USART2->SR = USART_SR_RXNE;
-  //d) Разрешите соответствующий вектор прерываний USART в NVIC. - ?
-  // указать функцию прерываний
-  NVIC_EnableIRQ(USART2_IRQn);
-  //e) Включите сам USART (USART_CR1, UE=1 ?)
-  USART2->CR1 |= USART_CR1_UE;
-}
-
-void GPIOA_Init() {
-  // тактирование
-  RCC->AHB1ENR |= GPIOAEN;
-
-  // PA2 mode: AF (10)
-  GPIOA->MODER |= (1U << 5);
-  GPIOA->MODER &= ~(1U << 4);
-  // PA3 mode: AF (10)
-  GPIOA->MODER |= (1U << 7);
-  GPIOA->MODER &= ~(1U << 6);
-
-  // PA2 AFRL=AFR[0] 0111: AF07 (USART2_TX)
-  GPIOA->AFR[0] &= ~(1U << 11);
-  GPIOA->AFR[0] |= (1U << 10);
-  GPIOA->AFR[0] |= (1U << 9);
-  GPIOA->AFR[0] |= (1U << 8);
-
-  // PA3 AF: AF07 (0111) (USART2_RX)
-  GPIOA->AFR[0] &= ~(1U << 15);
-  GPIOA->AFR[0] |= (1U << 14);
-  GPIOA->AFR[0] |= (1U << 13);
-  GPIOA->AFR[0] |= (1U << 12);
-}
-
-void LED_mode_setup() {
-  RCC->AHB1ENR |= GPIOCEN;
-  // 8 leds
-  // moder for pc4 = 01 - output mode
-  GPIOC->MODER |= (1U << 8);
-  GPIOC->MODER &= ~(1U << 9);
-  // pc5 output
-  GPIOC->MODER |= (1U << 10);
-  GPIOC->MODER &= ~(1U << 11);
-  // pc6 output
-  GPIOC->MODER |= (1U << 12);
-  GPIOC->MODER &= ~(1U << 13);
-  // pc7 output
-  GPIOC->MODER |= (1U << 14);
-  GPIOC->MODER &= ~(1U << 15);
-  // pc8 output
-  GPIOC->MODER |= (1U << 16);
-  GPIOC->MODER &= ~(1U << 17);
-  // pc9 output
-  GPIOC->MODER |= (1U << 18);
-  GPIOC->MODER &= ~(1U << 19);
-  // pc10 output
-  GPIOC->MODER |= (1U << 20);
-  GPIOC->MODER &= ~(1U << 21);
-  // pc11 output
-  GPIOC->MODER |= (1U << 22);
-  GPIOC->MODER &= ~(1U << 23);
-  // button
-  // pd2, pc13 - input = 00 - reset state
-}
 
 // transmit an array
 void transmit(const uint8_t* data, uint8_t n) {
@@ -110,53 +30,48 @@ void transmit(const uint8_t* data, uint8_t n) {
 
 // обработчик операции которая по вариантам
 void variant_handler(const uint8_t* data, uint8_t n) {
-	/* Сейчас обработчик посылает текстовый ответ.
-	 * В лабе обработчик будет включать светодиод.
-	 */
-	uint8_t led1[] = {'l', 'e', 'd', '\r', '\n'};
-	uint8_t off0[] = {'o', 'f', 'f', '\r', '\n'};
-	uint8_t n_trans = 5;
+	// выключим все светодиоды:
+	GPIOC->ODR &= 0xF00F;
 	switch(data[1]) {
 	case '0': {
 		//transmit(off0, n_trans);
-		GPIOC->ODR &= 0xF00F;
 		break;
 	}
 	case '1': {
 		//transmit(led1, n_trans);
-
+		// pc4
+		GPIOC->ODR |= (1U << 4);
 		break;
 	}
 	case '2': {
+		GPIOC->ODR |= (1U << 5);
 		break;
 	}
 	case '3': {
+		GPIOC->ODR |= (1U << 6);
 		break;
 	}
 	case '4': {
+		GPIOC->ODR |= (1U << 7);
 		break;
 	}
 	case '5': {
+		GPIOC->ODR |= (1U << 8);
 		break;
 	}
 	case '6': {
+		GPIOC->ODR |= (1U << 9);
 		break;
 	}
 	case '7': {
+		GPIOC->ODR |= (1U << 10);
 		break;
 	}
 	case '8': {
+		GPIOC->ODR |= (1U << 11);
 		break;
 	}
 	}
-}
-
-uint8_t receive() {
-	uint8_t res;
-	res = USART2->DR;
-	// сброс флага RXN
-	//USART2->SR &= ~USART_SR_RXNE;
-	return res;
 }
 
 void receive_arr(uint8_t*buf, uint8_t n) {
@@ -194,13 +109,21 @@ void command_handler(const uint8_t* data, uint8_t n) {
 	// variant command: accept '0'-'8' number and turn on one led
 	case 'v' | 'V': {
 		variant_handler(data, n);
+		transmit(data, n);
 		break;
 	}
 	// show leds configuration like 0b00010010
 	case 's' | 'S': {
 		// можно просто считать ODR
 		uint32_t leds = GPIOC->ODR;
-		// оттуда достать 11-4 биты...
+		leds &= 0x0FF0;
+		uint8_t res[8];
+		for (uint8_t i = 4; i < 12; i++) {
+			if (leds & (1U << i))
+				res[i-4]='1';
+			else res[i-4]='0';
+		}
+		transmit(res, 8);
 		break;
 	}
 	}
