@@ -75,11 +75,11 @@ void USART2_Init() {
   //b) Рассчитайте и установите скорость передачи (baud rate) в регистре (USART_BRR)
   // для системной частоты 16MHz
   USART2->BRR = APBx_FREQ / BAUDRATE;
-  //c) Включите генерацию прерываний RXNE (USART_SR)
-  USART2->SR = USART_SR_RXNE;
-  //d) Разрешите соответствующий вектор прерываний USART в NVIC. - ?
+  //c) Включите генерацию прерываний RXNE (USART_CR1)
+  USART2->CR1 |= USART_CR1_RXNEIE;
+  //d) Разрешите соответствующий вектор прерываний USART в NVIC.
   // указать функцию прерываний
   NVIC_EnableIRQ(USART2_IRQn);
-  //e) Включите сам USART (USART_CR1, UE=1 ?)
+  //e) Включите сам USART (USART_CR1, UE=1)
   USART2->CR1 |= USART_CR1_UE;
 }

@@ -18,7 +18,6 @@
 
 #include "initialization.h"
 
-
 // transmit an array
 void transmit(const uint8_t* data, uint8_t n) {
   for (uint8_t i = 0; i < n; i++) {
@@ -74,18 +73,6 @@ void variant_handler(const uint8_t* data, uint8_t n) {
 	}
 }
 
-void receive_arr(uint8_t*buf, uint8_t n) {
-	// receive
-	// when character is received, RXNE bit is set
-	// while nothing is received -- wait
-
-	for (uint8_t i = 0; i < n; i++) {
-		// Ждём, пока в USART2 появится новый байт
-		while (!(USART2->SR & USART_SR_RXNE)) {};
-		buf[i] = (uint8_t)(USART2->DR & 0xFF);
-	}
-}
-
 void command_handler(const uint8_t* data, uint8_t n) {
 	// command
 	switch (data[0]) {
@@ -129,22 +116,33 @@ void command_handler(const uint8_t* data, uint8_t n) {
 	}
 }
 
+uint8_t counter=0;
+// массив считанных данных
+uint8_t buf[] = {'a', 'b', 'c', 'd'};
+// Каждый байт массива снова вызывает эту функцию
+// здесь происходит считывание входных данных
+void USART2_IRQHandler() {
+	uint8_t n = 4;
+	// receive
+	if (USART2->SR & USART_SR_RXNE) {
+		buf[counter] = (uint8_t)(USART2->DR & 0xFF);
+		// снять RXNE
+		USART2->SR &= ~USART_SR_RXNE_Msk;
+		counter += 1; // считали ещё один бит
+	}
+	// если считаны все данные, их пора обработать
+	if (counter >= n) {
+		command_handler(buf, n);
+		counter=0;
+	}
+}
+
 int main(void) {
   GPIOA_Init();
   USART2_Init();
   LED_mode_setup();
 
-  // array to store received and transmitted data
-  uint8_t t[] = {'a', 'b', 'c', 'd'};
-  // array size
-  uint8_t n = 4;
   // loop forever
   for(;;) {
-	  receive_arr(t, n);
-	// получили данные -- пора отправить ответ
-	command_handler(t, n);
-
-	// todo: разделение функций по файлам
-	// todo: нормальные названия для функций, описания функций
   }
 }
