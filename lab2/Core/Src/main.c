@@ -20,11 +20,11 @@
 
 // transmit an array
 void transmit(const uint8_t* data, uint8_t n) {
-  for (uint8_t i = 0; i < n; i++) {
-	// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
-    while (!(USART2->SR & USART_SR_TXE)) {};
-	USART2->DR = data[i];
-  }
+	for (uint8_t i = 0; i < n; i++) {
+		// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
+		while (!(USART2->SR & USART_SR_TXE)) {};
+		USART2->DR = data[i];
+	}
 }
 
 // обработчик операции которая по вариантам
@@ -116,13 +116,14 @@ void command_handler(const uint8_t* data, uint8_t n) {
 	}
 }
 
+uint8_t isCommandRead = 0;
 uint8_t counter=0;
 // массив считанных данных
 uint8_t buf[] = {'a', 'b', 'c', 'd'};
+uint8_t n = 4; // размер массива считанных данных
 // Каждый байт массива снова вызывает эту функцию
 // здесь происходит считывание входных данных
 void USART2_IRQHandler() {
-	uint8_t n = 4;
 	// receive
 	if (USART2->SR & USART_SR_RXNE) {
 		buf[counter] = (uint8_t)(USART2->DR & 0xFF);
@@ -132,17 +133,22 @@ void USART2_IRQHandler() {
 	}
 	// если считаны все данные, их пора обработать
 	if (counter >= n) {
-		command_handler(buf, n);
+		isCommandRead = 1;
+		// command_handler(buf, n);
 		counter=0;
 	}
 }
 
 int main(void) {
-  GPIOA_Init();
-  USART2_Init();
-  LED_mode_setup();
+	GPIOA_Init();
+ 	USART2_Init();
+	LED_mode_setup();
 
-  // loop forever
-  for(;;) {
-  }
+	// loop forever
+	for(;;) {
+		if (isCommandRead) {
+			command_handler(buf, n);
+			isCommandRead = 0;
+		}
+	}
 }
