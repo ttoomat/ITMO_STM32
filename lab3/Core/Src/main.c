@@ -1,6 +1,6 @@
 /* main.c
  * author: ttoomat
- * date: October, 7, 2025.
+ * date: October, 13, 2025.
  */
 #include "init.h"
 
@@ -10,28 +10,8 @@
 
 void USART2_IRQHandler() {}
 
-void RCC_Init() {
-	// 1. Set FLASH latency
-	// flash latency One wait state - idk what latency we want
-	FLASH->ACR |= (1U << 0);
-	// 2. Enable HSE (external clock), wait until HSE is ready
-	RCC->CR |= RCC_CR_HSEON;
-	while(!(RCC->CR & RCC_CR_HSERDY)) {}
-	// 3. Set AHB, APB1, APB2 Prescaler
-	// AHB Prescaler = 1
-	RCC->CFGR &= ~RCC_CFGR_HPRE_3;
-	// APB1 Presc = 4 (101)
-	RCC->CFGR |= RCC_CFGR_PPRE1_2;
-	RCC->CFGR &= ~RCC_CFGR_PPRE1_1;
-	RCC->CFGR |= RCC_CFGR_PPRE1_0;
-	// APB2 Presc = 2 (100)
-	RCC->CFGR |= RCC_CFGR_PPRE1_2;
-	RCC->CFGR &= ~RCC_CFGR_PPRE1_1;
-	RCC->CFGR &= ~RCC_CFGR_PPRE1_0;
-	//RCC->CR |= RCC_CR_PLLON;
-}
-
 int main() {
+	// 1. RCC, Prescalers
 	RCC_Init();
 	// 2. FPU on
 	SCB->CPACR |= (3UL << 10 * 2) | (3UL << 11 * 2);
