@@ -1,0 +1,5 @@
+../Drivers/CMSIS/Include/core_cm4.h:1688:22:__NVIC_EnableIRQ	16	static
+../Core/Src/init.c:11:6:DAC_MODER_Init	4	static
+../Core/Src/init.c:19:6:DAC_Init	8	static
+../Core/Src/init.c:28:6:USART2_MODER_Init	4	static
+../Core/Src/init.c:51:6:USART2_Init	8	static

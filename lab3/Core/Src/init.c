@@ -8,9 +8,25 @@
 #define BAUDRATE 19200
 #define APBx_FREQ 16000000
 
+void DAC_MODER_Init() {
+	// PA4
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	// PA4 mode: Analog
+	GPIOA->MODER |= (1U << 8);
+	GPIOA->MODER |= (1U << 9);
+}
+
+void DAC_Init() {
+	DAC_MODER_Init();
+	RCC->APB1ENR |= RCC_APB1ENR_DACEN;
+	// channel 1
+	DAC->CR |= DAC_CR_EN1;
+	// upload data to DAC
+	DAC->DHR12R1 = 0xFFF;
+}
+
 void USART2_MODER_Init() {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-
 	// USART2
 	// PA2 mode: AF (10)
 	GPIOA->MODER |= (1U << 5);
@@ -47,6 +63,3 @@ void USART2_Init() {
 	USART2->CR1 |= USART_CR1_UE;
 }
 
-void DAC_Init() {
-
-}
