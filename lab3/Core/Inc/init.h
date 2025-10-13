@@ -12,5 +12,6 @@
 void RCC_Init();
 void DAC_Init();
 void USART2_Init();
+void TIM2_Init();
 
 #endif /* INC_INIT_H_ */

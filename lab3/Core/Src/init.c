@@ -116,12 +116,19 @@ void USART2_Init() {
 	USART2->CR1 |= USART_CR1_UE;
 }
 
-// I chose TIM1 for interrupts
-void TIM1_Init() {
+// I chose TIM2 for interrupts. APB1
+// если хотим синус частотой 15Гц, то таймер должен быть ещё намного быстрее
+void TIM2_Init() {
 	// 1. Включение тактирования таймера
-
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	// 2. Настройка Prescaler
-	// 3. Настройка значения ARR
+	TIM2->PSC = 10000-1; // 100 000 000 / 10 000 = 10 000
+	// 3. Настройка значения ARR (auto reload register)
+	TIM2->ARR = 10; // 10 000 / 10 = 1kHz
 	// 4. Разрешить прерывание по Update Event
+	TIM2->DIER |= (1U << 0); // Update interrupt enable
+	NVIC_EnableIRQ(TIM2_IRQn);
 	// 5. Запуск счетчика
+	TIM2->CR1 |= (1U << 0); // Counter enabled
+	TIM2->CNT = 0;
 }
