@@ -5,8 +5,10 @@
 
 #include "init.h"
 
-#define BAUDRATE 19200
-#define APBx_FREQ 16000000
+#define BAUDRATE 9600
+#define APBx_FREQ 25000000
+#define CP_FREQ 100000000
+#define SysTick_FREQ 1000
 
 void RCC_Init() {
 	// 1. Set FLASH latency
@@ -30,7 +32,7 @@ void RCC_Init() {
 	// 4.1. Set PLL clock source
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 	// 4.2. Set PLL M, N and P prescaler
-	// M = 8 => 001000
+	// M = 8 => 001000 - можно было просто 8 записать
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_3;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_0;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_1;
@@ -38,7 +40,7 @@ void RCC_Init() {
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_4;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_5;
 	// N = 100 =>  001100100
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN_8s;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN_8;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN_7;
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_6;
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_5;
@@ -116,19 +118,14 @@ void USART2_Init() {
 	USART2->CR1 |= USART_CR1_UE;
 }
 
-// I chose TIM2 for interrupts. APB1
-// если хотим синус частотой 15Гц, то таймер должен быть ещё намного быстрее
-void TIM2_Init() {
-	// 1. Включение тактирования таймера
-	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-	// 2. Настройка Prescaler
-	TIM2->PSC = 10000-1; // 100 000 000 / 10 000 = 10 000
-	// 3. Настройка значения ARR (auto reload register)
-	TIM2->ARR = 10; // 10 000 / 10 = 1kHz
-	// 4. Разрешить прерывание по Update Event
-	TIM2->DIER |= (1U << 0); // Update interrupt enable
-	NVIC_EnableIRQ(TIM2_IRQn);
-	// 5. Запуск счетчика
-	TIM2->CR1 |= (1U << 0); // Counter enabled
-	TIM2->CNT = 0;
+void SysTick_Init() {
+  // до скольки он считает
+  SysTick->LOAD = (uint32_t)(CP_FREQ/SysTick_FREQ - 1);
+  // internal clock
+  SysTick->CTRL |= (1U << 2);
+  // exception when counts down zero
+  SysTick->CTRL |= (1U << 1);
+  // Enable
+  SysTick->CTRL |= (1U << 0);
+  NVIC_EnableIRQ(SysTick_IRQn);
 }

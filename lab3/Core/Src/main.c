@@ -7,16 +7,19 @@
 
 #define CP_FREQ 100000000
 
-uint16_t SIN_FREQ = 15;
-float SIN_AMPLITUDE = 1.5;
-uint8_t timerUpdate = 0;
-uint8_t time = 0;
+double SIN_FREQ = 15;
+double SIN_AMPLITUDE = 1.2;
+uint8_t timerUpdate = 0; // if timer updated, this flag will change
+uint32_t time = 0; // time counter
 uint16_t maxDACData = 4095;
 
 uint8_t isDataRead = 0;
-// what would be data length?
-uint8_t dataLen = 2; // frequency, amplitude
+// we can choose 1 or 2 or 3rd operating mode: 0.1, 1, 10, default: 15Hz
+// and for amplitude 1.2, 1.3, 1.6, def: 1.5
+uint8_t dataLen = 1; // frequency, amplitude. What is amplitude if we have 0-3.3V interval? 0-3 for amplitude 1.5?
 uint8_t dataCounter = 0;
+uint8_t buf[] = {'a', 'b'};
+uint8_t isReceived = 0;
 void USART2_IRQHandler() {
 	// receive
 	if (USART2->SR & USART_SR_RXNE) {
@@ -25,24 +28,71 @@ void USART2_IRQHandler() {
 		USART2->SR &= ~USART_SR_RXNE_Msk;
 		dataCounter += 1; // считали ещё один бит
 	}
-	if (dataCounter >= n) {
+	if (dataCounter >= dataLen) {
 		isDataRead = 1;
 		// command_handler(buf, n);
 		dataCounter=0;
 	}
 }
 
-void TIM2_IRQHandler() {
-	// если update event
-	if (TIM2->SR & TIM_SR_UIF) {
-		// отключили флаг
-		TIM2->SR &= ~TIM_SR_UIF;
-		// надо послать на DAC что-то или хотя бы поднять флаг что DAC должен что-то изменить
-		time = (time + 1) % 15;
-		timerUpdate = 1;
+void USART_change_freq() {
+	// frequency
+	switch (buf[0]) {
+		case '1': {
+			SIN_FREQ = 0.15;
+			break;
+		}
+		case '2': {
+			SIN_FREQ = 1;
+			break;
+		}
+		case '3': {
+			SIN_FREQ = 10;
+			break;
+		}
+		default: {
+			SIN_FREQ = 15;
+			break;
+		}
+	}
+	switch (buf[0]) {
+		case '1': {
+			SIN_AMPLITUDE = 1.2;
+			break;
+		}
+		case '2': {
+			SIN_AMPLITUDE = 1.3;
+			break;
+		}
+		case '3': {
+			SIN_AMPLITUDE = 1.4;
+			break;
+		}
+		default: {
+			SIN_AMPLITUDE = 1.5;
+			break;
+		}
 	}
 }
 
+// transmit an array
+void transmit(const uint8_t* data, uint8_t n) {
+	for (uint8_t i = 0; i < n; i++) {
+		// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
+		while (!(USART2->SR & USART_SR_TXE)) {};
+		USART2->DR = data[i];
+	}
+}
+
+void SysTick_Handler() {
+	// отсчитал 1kHz частоту
+	time = (time + 1 % 10000);
+	timerUpdate=1;
+}
+
+/*
+ * Todo: what HSE frequency? Remake PLL prescalers.
+ */
 int main() {
 	// 1. RCC, Prescalers
 	RCC_Init();
@@ -51,16 +101,20 @@ int main() {
 	// 3-6 - GPIO for UART + UART init + same for DAC
 	USART2_Init();
 	DAC_Init();
-	TIM2_Init();
+	SysTick_Init();
 
 	while (1) {
 		if (timerUpdate) {
-			// делаем что-то с DAC
-			// частота и амплитуда синуса важны именно при подстановке в функцию sin
-			// хотим от 0 до 1.5?
-			// может понадобиться перевести аргумент в градусы (degrees * M_PI) / 180.0
-			DAC->DHR12R1 = (SIN_AMPLITUDE/2) * (sin(time / SIN_FREQ) + 1);
+			// upload to DAC
+			double sin_value = 0.5 * (sin(M_PI / 180.0 * time * SIN_FREQ) + 1.0);
+			uint16_t DAC_value = (uint16_t)(2 * SIN_AMPLITUDE * sin_value * maxDACData / 3.3);
+			DAC->DHR12R1 = DAC_value;
 			timerUpdate = 0;
+		}
+		// if UART received data
+		if (isReceived) {
+			USART_change_freq();
+			isReceived=0; // снимаем флаг, чтоб потом опять его ставить
 		}
 	}
 }
