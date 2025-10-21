@@ -7,8 +7,18 @@
 
 #define CP_FREQ 100000000
 
-double SIN_FREQ = 15;
+double SIN_FREQ = 1.0;
 double SIN_AMPLITUDE = 1.2;
+
+// transmit an array
+void transmit(const uint8_t* data, uint8_t n) {
+	for (uint8_t i = 0; i < n; i++) {
+		// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
+		while (!(USART2->SR & USART_SR_TXE)) {};
+		USART2->DR = data[i];
+	}
+}
+
 uint8_t timerUpdate = 0; // if timer updated, this flag will change
 uint32_t time = 0; // time counter
 uint16_t maxDACData = 4095;
@@ -19,8 +29,9 @@ uint8_t isDataRead = 0;
 uint8_t dataLen = 1; // frequency, amplitude. What is amplitude if we have 0-3.3V interval? 0-3 for amplitude 1.5?
 uint8_t dataCounter = 0;
 uint8_t buf[] = {'a', 'b'};
-uint8_t isReceived = 0;
+uint8_t buf2[] = {'a', 'b'};
 void USART2_IRQHandler() {
+	transmit(buf2, 2);
 	// receive
 	if (USART2->SR & USART_SR_RXNE) {
 		buf[dataCounter] = (uint8_t)(USART2->DR & 0xFF);
@@ -30,9 +41,9 @@ void USART2_IRQHandler() {
 	}
 	if (dataCounter >= dataLen) {
 		isDataRead = 1;
-		// command_handler(buf, n);
 		dataCounter=0;
 	}
+
 }
 
 void USART_change_freq() {
@@ -55,7 +66,7 @@ void USART_change_freq() {
 			break;
 		}
 	}
-	switch (buf[0]) {
+	switch (buf[1]) {
 		case '1': {
 			SIN_AMPLITUDE = 1.2;
 			break;
@@ -75,18 +86,9 @@ void USART_change_freq() {
 	}
 }
 
-// transmit an array
-void transmit(const uint8_t* data, uint8_t n) {
-	for (uint8_t i = 0; i < n; i++) {
-		// пока TXE = 0 будет задержка (TXE = 1 means USART_DR is empty, we can write)
-		while (!(USART2->SR & USART_SR_TXE)) {};
-		USART2->DR = data[i];
-	}
-}
-
 void SysTick_Handler() {
 	// отсчитал 1kHz частоту
-	time = (time + 1 % 10000);
+	time = (time + 1) % 180;
 	timerUpdate=1;
 }
 
@@ -100,7 +102,7 @@ int main() {
 	SCB->CPACR |= (3UL << 10 * 2) | (3UL << 11 * 2);
 	// 3-6 - GPIO for UART + UART init + same for DAC
 	USART2_Init();
-	DAC_Init();
+	DAC2_Init();
 	SysTick_Init();
 
 	while (1) {
@@ -108,13 +110,14 @@ int main() {
 			// upload to DAC
 			double sin_value = 0.5 * (sin(M_PI / 180.0 * time * SIN_FREQ) + 1.0);
 			uint16_t DAC_value = (uint16_t)(2 * SIN_AMPLITUDE * sin_value * maxDACData / 3.3);
-			DAC->DHR12R1 = DAC_value;
+			DAC->DHR12R2 = DAC_value;
 			timerUpdate = 0;
+			transmit(buf2, 2);
 		}
 		// if UART received data
-		if (isReceived) {
+		if (isDataRead) {
 			USART_change_freq();
-			isReceived=0; // снимаем флаг, чтоб потом опять его ставить
+			isDataRead=0; // снимаем флаг, чтоб потом опять его ставить
 		}
 	}
 }

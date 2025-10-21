@@ -5,15 +5,15 @@
 
 #include "init.h"
 
-#define BAUDRATE 9600
-#define APBx_FREQ 25000000
 #define CP_FREQ 100000000
 #define SysTick_FREQ 1000
+#define BAUDRATE 9600
+#define APB1_FREQ 25000000
 
 void RCC_Init() {
 	// 1. Set FLASH latency
-	// flash latency One wait state - idk what latency we want
-	FLASH->ACR |= (1U << 0);
+	// flash latency 3 wait states - table 5 Ref Man
+	FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
 	// 2. Enable HSE (external clock), wait until HSE is ready
 	RCC->CR |= RCC_CR_HSEON;
 	while(!(RCC->CR & RCC_CR_HSERDY)) {}
@@ -32,11 +32,11 @@ void RCC_Init() {
 	// 4.1. Set PLL clock source
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 	// 4.2. Set PLL M, N and P prescaler
-	// M = 8 => 001000 - можно было просто 8 записать
-	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_3;
+	// M = 4 => 000100
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_2;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_0;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_1;
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_2;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_3;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_4;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_5;
 	// N = 100 =>  001100100
@@ -50,8 +50,8 @@ void RCC_Init() {
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN_1;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLN_0;
 	// P = 2 => 00
-	RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLP_1;
-	RCC->PLLCFGR &= ~ RCC_PLLCFGR_PLLP_0;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP_1;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP_0;
 	// 4.3. Enable PLL. Wait until PLL start
 	RCC->CR |= RCC_CR_PLLON;
 	while(!(RCC->CR & RCC_CR_PLLRDY)) {}
@@ -71,6 +71,14 @@ void DAC_MODER_Init() {
 	GPIOA->MODER |= (1U << 9);
 }
 
+void DAC2_MODER_Init() {
+	// PA5
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	// PA5 mode: Analog
+	GPIOA->MODER |= (1U << 10);
+	GPIOA->MODER |= (1U << 11);
+}
+
 void DAC_Init() {
 	DAC_MODER_Init();
 	RCC->APB1ENR |= RCC_APB1ENR_DACEN;
@@ -78,6 +86,15 @@ void DAC_Init() {
 	DAC->CR |= DAC_CR_EN1;
 	// upload data to DAC
 	DAC->DHR12R1 = 0xFFF;
+}
+
+void DAC2_Init() {
+	DAC2_MODER_Init();
+	RCC->APB1ENR |= RCC_APB1ENR_DACEN;
+	// channel 2
+	DAC->CR |= DAC_CR_EN2;
+	// upload data to DAC
+	DAC->DHR12R2 = 0xFFF;
 }
 
 void USART2_MODER_Init() {
@@ -109,7 +126,7 @@ void USART2_Init() {
 	USART2->CR1 |= USART_CR1_TE;
 	USART2->CR1 |= USART_CR1_RE;
 	// baudrate
-	USART2->BRR = APBx_FREQ / BAUDRATE;
+	USART2->BRR = APB1_FREQ / BAUDRATE;
 	// RXNE interrupt enable
 	USART2->CR1 |= USART_CR1_RXNEIE;
 	// MVIC USART2 interrupt function
@@ -121,7 +138,7 @@ void USART2_Init() {
 void SysTick_Init() {
   // до скольки он считает
   SysTick->LOAD = (uint32_t)(CP_FREQ/SysTick_FREQ - 1);
-  // internal clock
+  // processor clock
   SysTick->CTRL |= (1U << 2);
   // exception when counts down zero
   SysTick->CTRL |= (1U << 1);

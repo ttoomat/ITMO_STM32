@@ -11,6 +11,7 @@
 
 void RCC_Init();     // prescalers, clk
 void DAC_Init();     // sine Analog output
+void DAC2_Init();     // sine Analog output
 void USART2_Init();  // for computer communication
 void SysTick_Init(); // time for sine
 
