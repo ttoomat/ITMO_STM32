@@ -5,11 +5,6 @@
 
 #include "init.h"
 
-#define CP_FREQ 100000000
-#define SysTick_FREQ 1000
-#define BAUDRATE 9600
-#define APB1_FREQ 25000000
-
 void RCC_Init() {
 	// 1. Set FLASH latency
 	// flash latency 3 wait states - table 5 Ref Man
@@ -24,19 +19,19 @@ void RCC_Init() {
 	RCC->CFGR |= RCC_CFGR_PPRE1_2;
 	RCC->CFGR &= ~RCC_CFGR_PPRE1_1;
 	RCC->CFGR |= RCC_CFGR_PPRE1_0;
-	// APB2 Presc = 2 (100)
-	RCC->CFGR |= RCC_CFGR_PPRE1_2;
-	RCC->CFGR &= ~RCC_CFGR_PPRE1_1;
-	RCC->CFGR &= ~RCC_CFGR_PPRE1_0;
+	// APB2 Presc = 4 (101)
+	RCC->CFGR |= RCC_CFGR_PPRE2_2;
+	RCC->CFGR &= ~RCC_CFGR_PPRE2_1;
+	RCC->CFGR |= RCC_CFGR_PPRE2_0;
 	// 4. Config PLL
 	// 4.1. Set PLL clock source
 	RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 	// 4.2. Set PLL M, N and P prescaler
-	// M = 4 => 000100
-	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_2;
+	// M = 8 => 001000
+	RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_3;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_0;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_1;
-	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_3;
+	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_2;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_4;
 	RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLM_5;
 	// N = 100 =>  001100100

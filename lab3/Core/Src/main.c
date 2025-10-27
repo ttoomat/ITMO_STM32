@@ -7,8 +7,9 @@
 
 #define CP_FREQ 100000000
 
-double SIN_FREQ = 1.0;
-double SIN_AMPLITUDE = 1.2;
+volatile double SIN_FREQ = 10;
+volatile double SIN_AMPLITUDE = 0.8;
+volatile uint32_t timer_cnt = 1000.0 / 10.0/2.75;
 
 // transmit an array
 void transmit(const uint8_t* data, uint8_t n) {
@@ -43,18 +44,17 @@ void USART2_IRQHandler() {
 		isDataRead = 1;
 		dataCounter=0;
 	}
-
 }
 
 void USART_change_freq() {
 	// frequency
 	switch (buf[0]) {
 		case '1': {
-			SIN_FREQ = 0.15;
+			SIN_FREQ = 1;
 			break;
 		}
 		case '2': {
-			SIN_FREQ = 1;
+			SIN_FREQ = 100;
 			break;
 		}
 		case '3': {
@@ -68,33 +68,31 @@ void USART_change_freq() {
 	}
 	switch (buf[1]) {
 		case '1': {
-			SIN_AMPLITUDE = 1.2;
+			SIN_AMPLITUDE = 0.8;
 			break;
 		}
 		case '2': {
-			SIN_AMPLITUDE = 1.3;
+			SIN_AMPLITUDE = 0.5;
 			break;
 		}
 		case '3': {
-			SIN_AMPLITUDE = 1.4;
+			SIN_AMPLITUDE = 0.2;
 			break;
 		}
 		default: {
-			SIN_AMPLITUDE = 1.5;
+			SIN_AMPLITUDE = 0.1;
 			break;
 		}
 	}
+	timer_cnt = 1000.0 / SIN_FREQ/2.75;
 }
 
 void SysTick_Handler() {
-	// отсчитал 1kHz частоту
-	time = (time + 1) % 180;
+	// отсчитал 1.5kHz частоту
+	time = (time + 1) % timer_cnt;
 	timerUpdate=1;
 }
 
-/*
- * Todo: what HSE frequency? Remake PLL prescalers.
- */
 int main() {
 	// 1. RCC, Prescalers
 	RCC_Init();
@@ -102,17 +100,17 @@ int main() {
 	SCB->CPACR |= (3UL << 10 * 2) | (3UL << 11 * 2);
 	// 3-6 - GPIO for UART + UART init + same for DAC
 	USART2_Init();
-	DAC2_Init();
+	DAC_Init();
 	SysTick_Init();
 
 	while (1) {
 		if (timerUpdate) {
 			// upload to DAC
-			double sin_value = 0.5 * (sin(M_PI / 180.0 * time * SIN_FREQ) + 1.0);
-			uint16_t DAC_value = (uint16_t)(2 * SIN_AMPLITUDE * sin_value * maxDACData / 3.3);
-			DAC->DHR12R2 = DAC_value;
+			double sin_value = SIN_AMPLITUDE * (sin(M_PI/180.0 * time * SIN_FREQ) + 1.0);
+			uint16_t DAC_value = (uint16_t)(2 * sin_value * maxDACData / 3.3);
+			DAC->DHR12R1 = DAC_value;
 			timerUpdate = 0;
-			transmit(buf2, 2);
+			//transmit(buf2, 2);
 		}
 		// if UART received data
 		if (isDataRead) {

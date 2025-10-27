@@ -1,0 +1,5 @@
+../Core/Src/stm32f4xx_hal_msp.c:63:6:HAL_MspInit	16	static
+../Core/Src/stm32f4xx_hal_msp.c:85:6:HAL_DAC_MspInit	48	static
+../Core/Src/stm32f4xx_hal_msp.c:118:6:HAL_DAC_MspDeInit	16	static
+../Core/Src/stm32f4xx_hal_msp.c:146:6:HAL_TIM_OnePulse_MspInit	24	static
+../Core/Src/stm32f4xx_hal_msp.c:168:6:HAL_TIM_OnePulse_MspDeInit	16	static
