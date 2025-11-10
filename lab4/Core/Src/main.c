@@ -1,6 +1,6 @@
 /* main.c
  * author: ttoomat
- * date: October, 13, 2025.
+ * date: November, 10, 2025.
  */
 #include <math.h> // sin
 #include "init.h"
@@ -115,7 +115,6 @@ int main() {
 			uint16_t DAC_value = (uint16_t)(sin_value * maxDACData / 2.975);
 			DAC->DHR12R1 = DAC_value;
 			timerUpdate = 0;
-			//transmit(buf2, 2);
 		}
 		// if UART received data
 		if (isDataRead) {
