@@ -4,6 +4,44 @@
  */
 
 #include "init.h"
+#define TIM6_DIER_UIE 0 // Update interrupt enable bit
+
+void ADC1_GPIO_Init() {
+	// ADC_IN1 = PC2
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+	// PC2 Analog
+	GPIOC->MODER |= (1U << 4);
+	GPIOC->MODER |= (1U << 5);
+}
+
+/* Посмотреть на схеме, какой канал ADC. Настроить MODER для этого пина.
+ * AnalogIN1 = PC2
+ */
+void ADC1_Init() {
+	NVIC_EnableIRQ(ADC_IRQn);
+	// настройка GPIO
+	ADC1_GPIO_Init();
+	// Включение тактирования АЦП
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+	// Настройка последовательности преобразований АЦП
+	// 1. Enable ADC (ADON)
+	ADC1->CR2 |= (1U << 0);
+	while (!(ADC1->CR2 & ADC_CR2_ADON)) {}
+	// 2. Set continuous conversation flag
+	ADC1->CR2 |= (1U << 1);
+	// EOCIE - прерывание "Regular channel end of conversion"
+	ADC1->CR1 |= (1U << 5);
+	// 3. write channel number in SQR3 - only one channel
+	ADC1->SQR3 = 12; // 12 = ADC channel for PC2
+	// Длина последовательности = 1 преобразование
+	ADC1->SQR1 &= ~ADC_SQR1_L; // L = 0 -> 1 conversion
+	// 4. Start conversation SWSTART
+	ADC1->CR2 |= (1U << 30);
+	// 5. Wait end of conversation (flag or IRQ)
+	while (!(ADC1->SR & ADC_SR_EOC)) {}
+	// Установка длины последовательности АЦП
+	// Включение АЦП
+}
 
 void RCC_Init() {
 	// 1. Set FLASH latency
@@ -111,6 +149,22 @@ void USART2_Init() {
 	NVIC_EnableIRQ(USART2_IRQn);
 	// USART2 enable
 	USART2->CR1 |= USART_CR1_UE;
+}
+
+// base timer
+void TIM6_Init() {
+	// вкл тактирование таймера, APB1
+	RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+	// у base timer нет gpio
+	// APB1 Prescaler = 4 из RCC init
+	// настройка Prescaler, ARR
+	// TIM6_FREQ = APB1_TIMER_FREQ/(PSC+1)(ARR+1)
+	// (PSC+1)(ARR+1) = 50000000/2000=25000=500*50
+	TIM6->PSC = (uint32_t)(499);
+	TIM6->ARR = (uint32_t)(49);
+	TIM6->DIER |= TIM6_DIER_UIE; // Update event interrupt enable
+	NVIC_EnableIRQ(TIM6_DAC_IRQn); // настроить прерывания
+	TIM6->CR1 |= TIM_CR1_CEN; // включить счётчик
 }
 
 void SysTick_Init() {

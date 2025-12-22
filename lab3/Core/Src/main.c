@@ -112,7 +112,7 @@ int main() {
 		if (timerUpdate) {
 			// upload to DAC
 			double sin_value = SIN_AMPLITUDE/2.0 * (sin(M_PI/180.0 * time * SIN_FREQ) + 1.0);
-			uint16_t DAC_value = (uint16_t)(sin_value * maxDACData / 2.975);
+			uint16_t DAC_value = (uint16_t)(sin_value * maxDACData / 3.345);
 			DAC->DHR12R1 = DAC_value;
 			timerUpdate = 0;
 			//transmit(buf2, 2);

@@ -1,4 +1,4 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/def.h \
+Core/Src/irq.o: ../Core/Src/irq.c ../Core/Inc/irq.h ../Core/Inc/def.h \
  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f446xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
  ../Drivers/CMSIS/Include/cmsis_version.h \
@@ -6,8 +6,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/def.h \
  ../Drivers/CMSIS/Include/cmsis_gcc.h \
  ../Drivers/CMSIS/Include/mpu_armv7.h \
  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h \
- ../Core/Inc/init.h ../Core/Inc/def.h ../Core/Inc/irq.h \
  ../Core/Inc/usart.h
+../Core/Inc/irq.h:
 ../Core/Inc/def.h:
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f446xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -16,7 +16,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/def.h \
 ../Drivers/CMSIS/Include/cmsis_gcc.h:
 ../Drivers/CMSIS/Include/mpu_armv7.h:
 ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h:
-../Core/Inc/init.h:
-../Core/Inc/def.h:
-../Core/Inc/irq.h:
 ../Core/Inc/usart.h:
