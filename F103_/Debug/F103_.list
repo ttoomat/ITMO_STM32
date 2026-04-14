@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000029  00000000  00000000  0001034c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00000a7d  00000000  00000000  00010375  2**0
+ 12 .debug_info   00000c82  00000000  00000000  00010375  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 000002c7  00000000  00000000  00010df2  2**0
+ 13 .debug_abbrev 000003df  00000000  00000000  00010ff7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000000a8  00000000  00000000  000110c0  2**3
+ 14 .debug_aranges 000000d8  00000000  00000000  000113d8  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_ranges 00000080  00000000  00000000  00011168  2**3
+ 15 .debug_ranges 00000090  00000000  00000000  000114b0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  000106c7  00000000  00000000  000111e8  2**0
+ 16 .debug_macro  00010c04  00000000  00000000  00011540  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00000bfd  00000000  00000000  000218af  2**0
+ 17 .debug_line   00001513  00000000  00000000  00022144  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    00055c2b  00000000  00000000  000224ac  2**0
+ 18 .debug_str    000580a5  00000000  00000000  00023657  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000780d7  2**0
+ 19 .comment      00000050  00000000  00000000  0007b6fc  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00000194  00000000  00000000  00078128  2**2
+ 20 .debug_frame  000001b4  00000000  00000000  0007b74c  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -76,100 +76,104 @@ Disassembly of section .text:
  8000144:	20000004 	.word	0x20000004
  8000148:	0800032c 	.word	0x0800032c
 
-0800014c <__NVIC_EnableIRQ>:
-  \details Enables a device specific interrupt in the NVIC interrupt controller.
-  \param [in]      IRQn  Device specific interrupt number.
-  \note    IRQn must not be negative.
+0800014c <MODE_R_Setup>:
  */
-__STATIC_INLINE void __NVIC_EnableIRQ(IRQn_Type IRQn)
-{
- 800014c:	b480      	push	{r7}
- 800014e:	b083      	sub	sp, #12
- 8000150:	af00      	add	r7, sp, #0
- 8000152:	4603      	mov	r3, r0
- 8000154:	71fb      	strb	r3, [r7, #7]
-  if ((int32_t)(IRQn) >= 0)
- 8000156:	f997 3007 	ldrsb.w	r3, [r7, #7]
- 800015a:	2b00      	cmp	r3, #0
- 800015c:	db0b      	blt.n	8000176 <__NVIC_EnableIRQ+0x2a>
-  {
-    NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
- 800015e:	79fb      	ldrb	r3, [r7, #7]
- 8000160:	f003 021f 	and.w	r2, r3, #31
- 8000164:	4906      	ldr	r1, [pc, #24]	; (8000180 <__NVIC_EnableIRQ+0x34>)
- 8000166:	f997 3007 	ldrsb.w	r3, [r7, #7]
- 800016a:	095b      	lsrs	r3, r3, #5
- 800016c:	2001      	movs	r0, #1
- 800016e:	fa00 f202 	lsl.w	r2, r0, r2
- 8000172:	f841 2023 	str.w	r2, [r1, r3, lsl #2]
-  }
-}
- 8000176:	bf00      	nop
- 8000178:	370c      	adds	r7, #12
- 800017a:	46bd      	mov	sp, r7
- 800017c:	bc80      	pop	{r7}
- 800017e:	4770      	bx	lr
- 8000180:	e000e100 	.word	0xe000e100
-
-08000184 <MODE_R_Setup>:
-
-volatile uint32_t time_cnt = 0;
-volatile uint8_t led_state = 0;
+#include "stm32f1xx.h"
+#include "LED.h"
 
 // PC13 led on
 void MODE_R_Setup() {
- 8000184:	b480      	push	{r7}
- 8000186:	af00      	add	r7, sp, #0
+ 800014c:	b480      	push	{r7}
+ 800014e:	af00      	add	r7, sp, #0
 	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
- 8000188:	4b0a      	ldr	r3, [pc, #40]	; (80001b4 <MODE_R_Setup+0x30>)
- 800018a:	699b      	ldr	r3, [r3, #24]
- 800018c:	4a09      	ldr	r2, [pc, #36]	; (80001b4 <MODE_R_Setup+0x30>)
- 800018e:	f043 0310 	orr.w	r3, r3, #16
- 8000192:	6193      	str	r3, [r2, #24]
+ 8000150:	4b0a      	ldr	r3, [pc, #40]	; (800017c <MODE_R_Setup+0x30>)
+ 8000152:	699b      	ldr	r3, [r3, #24]
+ 8000154:	4a09      	ldr	r2, [pc, #36]	; (800017c <MODE_R_Setup+0x30>)
+ 8000156:	f043 0310 	orr.w	r3, r3, #16
+ 800015a:	6193      	str	r3, [r2, #24]
 	// MODE13 = 10 (Output mode, max speed 2 MHz)
 	GPIOC->CRH &= ~(GPIO_CRH_MODE13);
- 8000194:	4b08      	ldr	r3, [pc, #32]	; (80001b8 <MODE_R_Setup+0x34>)
- 8000196:	685b      	ldr	r3, [r3, #4]
- 8000198:	4a07      	ldr	r2, [pc, #28]	; (80001b8 <MODE_R_Setup+0x34>)
- 800019a:	f423 1340 	bic.w	r3, r3, #3145728	; 0x300000
- 800019e:	6053      	str	r3, [r2, #4]
+ 800015c:	4b08      	ldr	r3, [pc, #32]	; (8000180 <MODE_R_Setup+0x34>)
+ 800015e:	685b      	ldr	r3, [r3, #4]
+ 8000160:	4a07      	ldr	r2, [pc, #28]	; (8000180 <MODE_R_Setup+0x34>)
+ 8000162:	f423 1340 	bic.w	r3, r3, #3145728	; 0x300000
+ 8000166:	6053      	str	r3, [r2, #4]
 	GPIOC->CRH |= (GPIO_CRH_MODE13_1);
- 80001a0:	4b05      	ldr	r3, [pc, #20]	; (80001b8 <MODE_R_Setup+0x34>)
- 80001a2:	685b      	ldr	r3, [r3, #4]
- 80001a4:	4a04      	ldr	r2, [pc, #16]	; (80001b8 <MODE_R_Setup+0x34>)
- 80001a6:	f443 1300 	orr.w	r3, r3, #2097152	; 0x200000
- 80001aa:	6053      	str	r3, [r2, #4]
+ 8000168:	4b05      	ldr	r3, [pc, #20]	; (8000180 <MODE_R_Setup+0x34>)
+ 800016a:	685b      	ldr	r3, [r3, #4]
+ 800016c:	4a04      	ldr	r2, [pc, #16]	; (8000180 <MODE_R_Setup+0x34>)
+ 800016e:	f443 1300 	orr.w	r3, r3, #2097152	; 0x200000
+ 8000172:	6053      	str	r3, [r2, #4]
 }
- 80001ac:	bf00      	nop
- 80001ae:	46bd      	mov	sp, r7
- 80001b0:	bc80      	pop	{r7}
- 80001b2:	4770      	bx	lr
- 80001b4:	40021000 	.word	0x40021000
- 80001b8:	40011000 	.word	0x40011000
+ 8000174:	bf00      	nop
+ 8000176:	46bd      	mov	sp, r7
+ 8000178:	bc80      	pop	{r7}
+ 800017a:	4770      	bx	lr
+ 800017c:	40021000 	.word	0x40021000
+ 8000180:	40011000 	.word	0x40011000
 
-080001bc <LED_toggle>:
+08000184 <LED_toggle>:
 
 void LED_on() {
 	GPIOC->ODR &= ~(GPIO_ODR_ODR13);
 }
 
 void LED_toggle() {
- 80001bc:	b480      	push	{r7}
- 80001be:	af00      	add	r7, sp, #0
+ 8000184:	b480      	push	{r7}
+ 8000186:	af00      	add	r7, sp, #0
 	GPIOC->ODR ^= (GPIO_ODR_ODR13);
- 80001c0:	4b04      	ldr	r3, [pc, #16]	; (80001d4 <LED_toggle+0x18>)
- 80001c2:	68db      	ldr	r3, [r3, #12]
- 80001c4:	4a03      	ldr	r2, [pc, #12]	; (80001d4 <LED_toggle+0x18>)
- 80001c6:	f483 5300 	eor.w	r3, r3, #8192	; 0x2000
- 80001ca:	60d3      	str	r3, [r2, #12]
+ 8000188:	4b04      	ldr	r3, [pc, #16]	; (800019c <LED_toggle+0x18>)
+ 800018a:	68db      	ldr	r3, [r3, #12]
+ 800018c:	4a03      	ldr	r2, [pc, #12]	; (800019c <LED_toggle+0x18>)
+ 800018e:	f483 5300 	eor.w	r3, r3, #8192	; 0x2000
+ 8000192:	60d3      	str	r3, [r2, #12]
 }
- 80001cc:	bf00      	nop
+ 8000194:	bf00      	nop
+ 8000196:	46bd      	mov	sp, r7
+ 8000198:	bc80      	pop	{r7}
+ 800019a:	4770      	bx	lr
+ 800019c:	40011000 	.word	0x40011000
+
+080001a0 <__NVIC_EnableIRQ>:
+  \details Enables a device specific interrupt in the NVIC interrupt controller.
+  \param [in]      IRQn  Device specific interrupt number.
+  \note    IRQn must not be negative.
+ */
+__STATIC_INLINE void __NVIC_EnableIRQ(IRQn_Type IRQn)
+{
+ 80001a0:	b480      	push	{r7}
+ 80001a2:	b083      	sub	sp, #12
+ 80001a4:	af00      	add	r7, sp, #0
+ 80001a6:	4603      	mov	r3, r0
+ 80001a8:	71fb      	strb	r3, [r7, #7]
+  if ((int32_t)(IRQn) >= 0)
+ 80001aa:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80001ae:	2b00      	cmp	r3, #0
+ 80001b0:	db0b      	blt.n	80001ca <__NVIC_EnableIRQ+0x2a>
+  {
+    NVIC->ISER[(((uint32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+ 80001b2:	79fb      	ldrb	r3, [r7, #7]
+ 80001b4:	f003 021f 	and.w	r2, r3, #31
+ 80001b8:	4906      	ldr	r1, [pc, #24]	; (80001d4 <__NVIC_EnableIRQ+0x34>)
+ 80001ba:	f997 3007 	ldrsb.w	r3, [r7, #7]
+ 80001be:	095b      	lsrs	r3, r3, #5
+ 80001c0:	2001      	movs	r0, #1
+ 80001c2:	fa00 f202 	lsl.w	r2, r0, r2
+ 80001c6:	f841 2023 	str.w	r2, [r1, r3, lsl #2]
+  }
+}
+ 80001ca:	bf00      	nop
+ 80001cc:	370c      	adds	r7, #12
  80001ce:	46bd      	mov	sp, r7
  80001d0:	bc80      	pop	{r7}
  80001d2:	4770      	bx	lr
- 80001d4:	40011000 	.word	0x40011000
+ 80001d4:	e000e100 	.word	0xe000e100
 
 080001d8 <TIM1_Setup>:
+#define APB2_FREQ (8000000UL)
+#define TIM1_FREQ (1UL)
+
+volatile uint32_t time_cnt = 0;
 
 void TIM1_Setup() {
  80001d8:	b580      	push	{r7, lr}
@@ -202,7 +206,7 @@ void TIM1_Setup() {
  800020e:	6013      	str	r3, [r2, #0]
 	NVIC_EnableIRQ(TIM1_UP_IRQn);
  8000210:	2019      	movs	r0, #25
- 8000212:	f7ff ff9b 	bl	800014c <__NVIC_EnableIRQ>
+ 8000212:	f7ff ffc5 	bl	80001a0 <__NVIC_EnableIRQ>
 }
  8000216:	bf00      	nop
  8000218:	bd80      	pop	{r7, pc}
@@ -244,12 +248,16 @@ void TIM1_UP_IRQHandler() {
  8000258:	2000001c 	.word	0x2000001c
 
 0800025c <main>:
+ */
+#include "stm32f1xx.h"
+#include <math.h> // sin
+#include "main.h"
 
 int main() {
  800025c:	b580      	push	{r7, lr}
  800025e:	af00      	add	r7, sp, #0
 	MODE_R_Setup();
- 8000260:	f7ff ff90 	bl	8000184 <MODE_R_Setup>
+ 8000260:	f7ff ff74 	bl	800014c <MODE_R_Setup>
 	TIM1_Setup();
  8000264:	f7ff ffb8 	bl	80001d8 <TIM1_Setup>
 	while (1) {
@@ -259,7 +267,7 @@ int main() {
  800026c:	2b02      	cmp	r3, #2
  800026e:	d9fb      	bls.n	8000268 <main+0xc>
 			LED_toggle();
- 8000270:	f7ff ffa4 	bl	80001bc <LED_toggle>
+ 8000270:	f7ff ff88 	bl	8000184 <LED_toggle>
 			time_cnt = 0;
  8000274:	4b01      	ldr	r3, [pc, #4]	; (800027c <main+0x20>)
  8000276:	2200      	movs	r2, #0

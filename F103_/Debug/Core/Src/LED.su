@@ -1,0 +1,4 @@
+../Core/Src/LED.c:9:6:MODE_R_Setup	4	static
+../Core/Src/LED.c:17:6:LED_off	4	static
+../Core/Src/LED.c:21:6:LED_on	4	static
+../Core/Src/LED.c:25:6:LED_toggle	4	static
