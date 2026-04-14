@@ -93,7 +93,7 @@
 /*!< Uncomment the following line if you need to relocate the vector table
      anywhere in Flash or Sram, else the vector table is kept at the automatic
      remap of boot address selected */
-/* #define USER_VECT_TAB_ADDRESS */
+#define USER_VECT_TAB_ADDRESS
 
 #if defined(USER_VECT_TAB_ADDRESS)
 /*!< Uncomment the following line if you need to relocate your vector Table
@@ -172,6 +172,7 @@ const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
   * @param  None
   * @retval None
   */
+
 void SystemInit (void)
 {
 #if defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F101xG) || defined(STM32F103xE) || defined(STM32F103xG)
