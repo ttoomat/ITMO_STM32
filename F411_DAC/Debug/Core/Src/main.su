@@ -1,5 +1,7 @@
-../Core/Src/main.c:4:6:LED_Setup	4	static
-../Core/Src/main.c:12:6:LED_off	4	static
-../Core/Src/main.c:16:6:LED_on	4	static
-../Core/Src/main.c:20:6:LED_toggle	4	static
-../Core/Src/main.c:24:5:main	8	static
+../Core/Src/main.c:15:6:LED_Setup	4	static
+../Core/Src/main.c:23:6:LED_off	4	static
+../Core/Src/main.c:27:6:LED_on	4	static
+../Core/Src/main.c:31:6:LED_toggle	4	static
+../Core/Src/main.c:35:6:SPI1_Send	16	static
+../Core/Src/main.c:46:6:SPI1_Setup	4	static
+../Core/Src/main.c:77:5:main	16	static
