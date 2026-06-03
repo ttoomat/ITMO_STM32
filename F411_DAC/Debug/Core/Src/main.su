@@ -1,7 +1,6 @@
-../Core/Src/main.c:15:6:LED_Setup	4	static
-../Core/Src/main.c:23:6:LED_off	4	static
-../Core/Src/main.c:27:6:LED_on	4	static
-../Core/Src/main.c:31:6:LED_toggle	4	static
-../Core/Src/main.c:35:6:SPI1_Send	16	static
-../Core/Src/main.c:46:6:SPI1_Setup	4	static
-../Core/Src/main.c:77:5:main	16	static
+../Drivers/CMSIS/Include/core_cm4.h:1688:22:__NVIC_EnableIRQ	16	static
+../Core/Src/main.c:19:6:SPI1_Send	24	static
+../Core/Src/main.c:35:6:SPI1_Setup	4	static
+../Core/Src/main.c:70:6:SysTick_Init	8	static
+../Core/Src/main.c:83:6:SysTick_Handler	4	static
+../Core/Src/main.c:94:5:main	8	static
