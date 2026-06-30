@@ -1,4 +1,6 @@
 "./Core/Src/main.o"
+"./Core/Src/mosfet_pwm.o"
+"./Core/Src/sin_gen.o"
 "./Core/Src/syscalls.o"
 "./Core/Src/sysmem.o"
 "./Core/Src/system_stm32g4xx.o"
